@@ -885,7 +885,7 @@ BOOL AskTGT_cert(char* user, char* domain, char* certificate, char* certificateP
     if (responseAsn.tagValue == KERB_ERROR) {
         uint errorCode = 0;
         if (!AsnGetErrorCode(&(responseAsn.sub[0]), &errorCode))
-            PRINT_OUT("[X] PKINIT failed: %s\n", lookupKrbErrorCode(errorCode));
+            PRINT_OUT("[X] PKINIT failed: %s (error %u / 0x%X)\n", lookupKrbErrorCode(errorCode), errorCode, errorCode);
         return TRUE;
     }
     if (responseAsn.tagValue != KERB_AS_REP) {
