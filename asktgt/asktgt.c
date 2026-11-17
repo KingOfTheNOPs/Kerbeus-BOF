@@ -493,7 +493,7 @@ void ASK_TGT_RUN( PCHAR Buffer, DWORD Length ) {
             }
         }
         else if (cert) {
-            if (AskTGT_cert(user, domain, cert, password, pac, show, nowrap, ptt, dc, &ticket)) {
+            if (AskTGT_cert(user, domain, cert, password, opsec, pac, show, nowrap, ptt, dc, &ticket)) {
                 PRINT_OUT("[X] PKINIT TGT request failed.\n");
                 return;
             }

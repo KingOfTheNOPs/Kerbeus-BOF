@@ -1,5 +1,5 @@
 
-BOF_CFLAGS := -I ./ -Os -w -Wno-incompatible-pointer-types -fno-builtin-memset -fno-asynchronous-unwind-tables -fno-unwind-tables -fno-jump-tables -fno-tree-switch-conversion
+BOF_CFLAGS := -I ./ -std=gnu17 -Os -w -Wno-incompatible-pointer-types -fno-builtin-memset -fno-asynchronous-unwind-tables -fno-unwind-tables -fno-jump-tables -fno-tree-switch-conversion
 
 all: bof
 

@@ -699,8 +699,9 @@ RAW_DATA* FindRawPaData(AS_REP* asRep, DWORD type) {
     return NULL;
 }
 
-BOOL NewAS_REQ_cert(char* pcUsername, char* pcDomain, BOOL bPac, AS_REQ* as_req) {
-    // Certificate PKINIT negotiates AES reply keys; RC4 is intentionally omitted.
+BOOL NewAS_REQ_cert(char* pcUsername, char* pcDomain, BOOL bPac, BOOL opsec, AS_REQ* as_req) {
+    // The default profile advertises only reply key types this implementation
+    // can derive. /opsec uses the broader kinit ordering described by Synacktiv.
     as_req->pvno = 5;
     as_req->msg_type = KERB_AS_REQ;
 
@@ -729,12 +730,20 @@ BOOL NewAS_REQ_cert(char* pcUsername, char* pcDomain, BOOL bPac, AS_REQ* as_req)
     if (my_copybuf(&(as_req->req_body.sname.name_string[1]), pcDomain, my_strlen(pcDomain) + 1))
         return TRUE;
 
-    as_req->req_body.etypes_count = 2;
+    as_req->req_body.etypes_count = opsec ? 8 : 2;
     as_req->req_body.etypes = MemAlloc(sizeof(int) * as_req->req_body.etypes_count);
     if (!as_req->req_body.etypes)
         return TRUE;
     as_req->req_body.etypes[0] = aes256_cts_hmac_sha1;
     as_req->req_body.etypes[1] = aes128_cts_hmac_sha1;
+    if (opsec) {
+        as_req->req_body.etypes[2] = aes256_cts_hmac_sha384;
+        as_req->req_body.etypes[3] = aes128_cts_hmac_sha256;
+        as_req->req_body.etypes[4] = des3_cbc_sha1_kd;
+        as_req->req_body.etypes[5] = rc4_hmac;
+        as_req->req_body.etypes[6] = camellia128_cts_cmac;
+        as_req->req_body.etypes[7] = camellia256_cts_cmac;
+    }
 
     as_req->pa_data_count = 2;
     as_req->pa_data = MemAlloc(sizeof(PA_DATA) * as_req->pa_data_count);
@@ -750,7 +759,7 @@ BOOL NewAS_REQ_cert(char* pcUsername, char* pcDomain, BOOL bPac, AS_REQ* as_req)
     return FALSE;
 }
 
-BOOL AskTGT_cert(char* user, char* domain, char* certificate, char* certificatePassword, BOOL pac, BOOL show, BOOL nowrap, BOOL ptt, char* dc, byte** kirbiBytes) {
+BOOL AskTGT_cert(char* user, char* domain, char* certificate, char* certificatePassword, BOOL opsec, BOOL pac, BOOL show, BOOL nowrap, BOOL ptt, char* dc, byte** kirbiBytes) {
     // High-level PKINIT flow:
     // 1. Import the supplied PFX and find its private key.
     // 2. Generate an ephemeral DH key pair and signed AuthPack.
@@ -806,10 +815,13 @@ BOOL AskTGT_cert(char* user, char* domain, char* certificate, char* certificateP
     }
 
     AS_REQ certAsReq = { 0 };
-    if (NewAS_REQ_cert(user, domain, pac, &certAsReq)) {
+    if (NewAS_REQ_cert(user, domain, pac, opsec, &certAsReq)) {
         PRINT_OUT("[X] Failed to build the PKINIT AS-REQ.\n");
         return TRUE;
     }
+
+    if (opsec)
+        PRINT_OUT("[*] PKINIT etype profile: kinit (18,17,20,19,16,23,25,26)\n");
 
     DWORD pkNonce = 0;
     ADVAPI32$SystemFunction036(&pkNonce, sizeof(pkNonce));

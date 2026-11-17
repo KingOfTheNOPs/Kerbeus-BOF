@@ -47,8 +47,12 @@ enum KERB_ETYPE {
 	des3_cbc_sha1_kd = 16,
 	aes128_cts_hmac_sha1 = 17,
 	aes256_cts_hmac_sha1 = 18,
+	aes128_cts_hmac_sha256 = 19,
+	aes256_cts_hmac_sha384 = 20,
 	rc4_hmac = 23,
 	rc4_hmac_exp = 24,
+	camellia128_cts_cmac = 25,
+	camellia256_cts_cmac = 26,
 	subkey_keymaterial = 65,
 	old_exp = -135,
 };
